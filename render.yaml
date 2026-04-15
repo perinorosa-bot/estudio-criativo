@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: estudio-criativo
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
+    envVars:
+      - key: ADMIN_PASSWORD
+        sync: false          # set manually in Render dashboard
+      - key: SECRET_KEY
+        generateValue: true  # Render generates a random value automatically
+      - key: DATA_DIR
+        value: /data
+      - key: UPLOADS_DIR
+        value: /data/uploads
+      - key: GDRIVE_FOLDER_ID
+        sync: false          # set manually — ID of the Drive folder
+      - key: GDRIVE_SERVICE_ACCOUNT_B64
+        sync: false          # set manually — base64-encoded service account JSON
+    disk:
+      name: estudio-data
+      mountPath: /data
+      sizeGB: 1

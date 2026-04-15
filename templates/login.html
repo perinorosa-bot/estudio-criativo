@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>estúdio criativo — acesso</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
+@font-face{font-family:'Gelato';src:url('{{ url_for("static",filename="fonts/GelatoTypewriter-Regular.woff2") }}') format('woff2'),url('{{ url_for("static",filename="fonts/GelatoTypewriter-Regular.woff") }}') format('woff');font-weight:400;font-display:swap}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'EB Garamond',Georgia,serif;background:#EDE8E0;min-height:100vh;display:flex;align-items:center;justify-content:center;color:#1A2744}
+.card{background:#F7F4EF;border:0.5px solid #D8D2C8;border-radius:16px;padding:48px 40px;width:360px;text-align:center}
+.logo{font-size:28px;font-weight:400;letter-spacing:-0.02em;margin-bottom:4px}
+.logo em{font-style:italic;color:#5C6470}
+.sub{font-family:'Gelato',monospace;font-size:12px;color:#A8A49C;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:36px}
+.field{margin-bottom:16px;text-align:left}
+label{font-family:'Gelato',monospace;font-size:12px;color:#5C6470;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px}
+input[type=password]{width:100%;padding:11px 14px;border:0.5px solid #D8D2C8;border-radius:8px;font-size:15px;outline:none;background:#EDE8E0;color:#1A2744;font-family:inherit;transition:border-color 0.15s}
+input[type=password]:focus{border-color:#1A2744;background:#F7F4EF}
+.btn{width:100%;padding:12px;background:#1A2744;color:#F7F4EF;border:none;border-radius:8px;font-size:13px;font-family:'Gelato',monospace;cursor:pointer;letter-spacing:0.05em;transition:background 0.15s;margin-top:8px;text-transform:uppercase}
+.btn:hover{background:#263660}
+.error{background:#F5E4E6;color:#A31C2C;border-radius:8px;padding:10px 14px;font-family:'Gelato',monospace;font-size:12px;margin-bottom:16px;text-align:left}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">estúdio <em>criativo</em></div>
+  <div class="sub">acesso privado</div>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="POST">
+    <div class="field">
+      <label>senha</label>
+      <input type="password" name="password" placeholder="••••••••" autofocus autocomplete="current-password" />
+    </div>
+    <button type="submit" class="btn">entrar</button>
+  </form>
+</div>
+</body>
+</html>

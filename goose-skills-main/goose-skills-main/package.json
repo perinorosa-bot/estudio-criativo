@@ -1,0 +1,31 @@
+{
+  "name": "goose-skills",
+  "version": "1.0.1",
+  "description": "GTM skills for Claude Code — install with npx goose-skills install <slug>",
+  "bin": {
+    "goose-skills": "./bin/goose-skills.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/athina-ai/goose-skills"
+  },
+  "scripts": {
+    "test": "node --test",
+    "build:index": "node scripts/build-index.js",
+    "validate:skills": "node scripts/validate-skills.js",
+    "ci": "npm run validate:skills && npm run build:index && npm test"
+  },
+  "keywords": [
+    "claude-code",
+    "skills",
+    "gtm",
+    "sales",
+    "marketing",
+    "scraping"
+  ],
+  "author": "Athina AI",
+  "license": "MIT",
+  "devDependencies": {
+    "@changesets/cli": "^2.29.6"
+  }
+}
