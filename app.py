@@ -19,12 +19,23 @@ app.secret_key = os.environ.get('SECRET_KEY', 'estudio-criativo-secret-2024')
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100 MB
 
 BASE = Path(__file__).parent
+
+def _ensure_dir(path: Path) -> Path:
+    """Create directory, falling back to a local path if permission is denied."""
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+    except PermissionError:
+        fallback = BASE / 'data'
+        logging.warning(f'[storage] cannot create {path}, falling back to {fallback}')
+        fallback.mkdir(parents=True, exist_ok=True)
+        return fallback
+
 # In production, set DATA_DIR env var to a persistent disk path (e.g. /data)
-_data_dir = Path(os.environ.get('DATA_DIR', str(BASE / 'data')))
-_data_dir.mkdir(parents=True, exist_ok=True)
+_data_dir = _ensure_dir(Path(os.environ.get('DATA_DIR', str(BASE / 'data'))))
 DATA_FILE = _data_dir / 'projects.json'
-UPLOADS_DIR = Path(os.environ.get('UPLOADS_DIR', str(BASE / 'static' / 'uploads')))
-UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+_uploads_target = Path(os.environ.get('UPLOADS_DIR', str(BASE / 'static' / 'uploads')))
+UPLOADS_DIR = _ensure_dir(_uploads_target)
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 ADMIN_PASSWORD_HASH = hashlib.sha256(
