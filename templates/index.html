@@ -1323,9 +1323,19 @@ function closeFullscreenEditor(){
 function fsInsertText(t){
   const ta=document.getElementById('fsBodyTA');
   if(!ta) return;
-  const s=ta.selectionStart;
-  ta.value=ta.value.slice(0,s)+t+ta.value.slice(ta.selectionEnd);
-  ta.focus({preventScroll:true});ta.selectionStart=ta.selectionEnd=s+t.length;
+  ta.focus({preventScroll:true});
+  const start=ta.selectionStart,end=ta.selectionEnd,val=ta.value;
+  const isLinePrefix=(t==='- '||t==='## '||t==='> ');
+  if(isLinePrefix&&start!==end){
+    const lineStart=val.lastIndexOf('\n',start-1)+1;
+    const lineEnd=val.indexOf('\n',end-1);
+    const blockEnd=lineEnd===-1?val.length:lineEnd;
+    ta.setSelectionRange(lineStart,blockEnd);
+    const modified=val.slice(lineStart,blockEnd).split('\n').map(l=>t+l).join('\n');
+    document.execCommand('insertText',false,modified);
+  } else {
+    document.execCommand('insertText',false,t);
+  }
   autoExpandTA(ta);
   scheduleSave('content',ta.value);
 }
@@ -1893,7 +1903,25 @@ function exportPDF(){
 
 // MODAL
 function closeModal(id){document.getElementById(id).classList.remove('open');}
-function insertText(t){const ta=document.getElementById('editorBody');if(!ta) return;const s=ta.selectionStart;ta.value=ta.value.slice(0,s)+t+ta.value.slice(ta.selectionEnd);const container=document.querySelector('.content');const scrollTop=container?container.scrollTop:0;ta.focus({preventScroll:true});ta.selectionStart=ta.selectionEnd=s+t.length;if(container)container.scrollTop=scrollTop;scheduleSave('content',ta.value);}
+function insertText(t){
+  const ta=document.getElementById('editorBody');
+  if(!ta) return;
+  ta.focus({preventScroll:true});
+  const start=ta.selectionStart,end=ta.selectionEnd,val=ta.value;
+  const isLinePrefix=(t==='- '||t==='## '||t==='> ');
+  if(isLinePrefix&&start!==end){
+    // prefix every selected line instead of replacing the selection
+    const lineStart=val.lastIndexOf('\n',start-1)+1;
+    const lineEnd=val.indexOf('\n',end-1);
+    const blockEnd=lineEnd===-1?val.length:lineEnd;
+    ta.setSelectionRange(lineStart,blockEnd);
+    const modified=val.slice(lineStart,blockEnd).split('\n').map(l=>t+l).join('\n');
+    document.execCommand('insertText',false,modified);
+  } else {
+    document.execCommand('insertText',false,t);
+  }
+  scheduleSave('content',ta.value);
+}
 function askAI(){toast('funcionalidade de IA em breve');}
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
