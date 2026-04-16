@@ -145,7 +145,7 @@ body{font-family:var(--serif);background:var(--bg);color:var(--text);height:100v
 .editor{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--rl);padding:30px;position:relative}
 .editor-title{font-size:30px;font-weight:400;letter-spacing:-0.02em;background:none;border:none;outline:none;width:100%;color:var(--text);font-family:var(--serif);margin-bottom:18px}
 .editor-title::placeholder{color:var(--hint)}
-.toolbar{display:flex;gap:7px;margin-bottom:14px;padding-bottom:14px;border-bottom:0.5px solid var(--border);flex-wrap:wrap;align-items:center}
+.toolbar{display:flex;gap:7px;margin-bottom:14px;padding-bottom:14px;border-bottom:0.5px solid var(--border);flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:10;background:var(--surface);padding-top:6px;margin-top:-6px}
 .toolbar-right{margin-left:auto}
 .tool{padding:6px 12px;font-size:13px;border:0.5px solid var(--border);border-radius:var(--r);background:var(--surface2);color:var(--muted);cursor:pointer;font-family:var(--mono);transition:all .15s}
 .tool:hover{color:var(--text);border-color:var(--border2)}
