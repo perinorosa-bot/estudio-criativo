@@ -631,6 +631,7 @@ body{font-family:var(--serif);background:var(--bg);color:var(--text);height:100v
     <button class="tool" onclick="fsInsertText('**')">negrito</button>
     <button class="tool" onclick="fsInsertText('- ')">lista</button>
     <button class="tool" onclick="fsInsertText('> ')">citação</button>
+    <button class="tool" onclick="fsInsertText('— ')" title="travessão de diálogo">— diálogo</button>
     <button class="tool save-btn" id="fsSaveBtn" onclick="manualSave('fs')" title="salvar agora">salvar</button>
     <button class="editor-fs-close" onclick="closeFullscreenEditor()">← fechar</button>
   </div>
@@ -1230,6 +1231,7 @@ function showEditorToolbar(){
     <button class="tool" onclick="insertText('**')">negrito</button>
     <button class="tool" onclick="insertText('- ')">lista</button>
     <button class="tool" onclick="insertText('> ')">citação</button>
+    <button class="tool" onclick="insertText('— ')" title="travessão de diálogo">— diálogo</button>
     <button class="tool accent" onclick="askAI()">✦ ia ↗</button>
     ${guideBtn}
     <button class="tool save-btn" id="saveBtn" onclick="manualSave()" title="salvar agora">salvar</button>
@@ -1325,7 +1327,7 @@ function fsInsertText(t){
   if(!ta) return;
   ta.focus({preventScroll:true});
   const start=ta.selectionStart,end=ta.selectionEnd,val=ta.value;
-  const isLinePrefix=(t==='- '||t==='## '||t==='> ');
+  const isLinePrefix=(t==='- '||t==='## '||t==='> '||t==='— ');
   if(isLinePrefix&&start!==end){
     const lineStart=val.lastIndexOf('\n',start-1)+1;
     const lineEnd=val.indexOf('\n',end-1);
@@ -1908,7 +1910,7 @@ function insertText(t){
   if(!ta) return;
   ta.focus({preventScroll:true});
   const start=ta.selectionStart,end=ta.selectionEnd,val=ta.value;
-  const isLinePrefix=(t==='- '||t==='## '||t==='> ');
+  const isLinePrefix=(t==='- '||t==='## '||t==='> '||t==='— ');
   if(isLinePrefix&&start!==end){
     // prefix every selected line instead of replacing the selection
     const lineStart=val.lastIndexOf('\n',start-1)+1;
