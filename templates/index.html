@@ -1395,8 +1395,7 @@ function scheduleSave(field,val){
 }
 async function savePage(){
   if(!activePage||!activeSection||!activeProject) return;
-  await api('PUT',`/api/projects/${activeProject.id}/sections/${activeSection.id}/pages/${activePage.id}`,{title:activePage.title,content:activePage.content});
-  updateSubpageMeta();
+  await api('PUT',`/api/projects/${activeProject.id}/sections/${activeSection.id}/pages/${activePage.id}`,{title:activePage.title,content:activePage.content,form_answers:activePage.form_answers||{}});
 }
 async function manualSave(ctx){
   if(!activePage) return;
@@ -1406,22 +1405,26 @@ async function manualSave(ctx){
   clearTimeout(saveTimer);
   try{
     await savePage();
-    if(btn){btn.textContent='salvo ✓';btn.classList.remove('saving');btn.classList.add('saved');}
-    setTimeout(()=>{if(btn){btn.textContent='salvar';btn.classList.remove('saved');}},2000);
+    // re-fetch button — DOM may have changed
+    const b=document.getElementById(btnId);
+    if(b){b.textContent='salvo ✓';b.classList.remove('saving');b.classList.add('saved');}
+    setTimeout(()=>{const b2=document.getElementById(btnId);if(b2){b2.textContent='salvar';b2.classList.remove('saved');}},2000);
   }catch(e){
-    if(btn){btn.textContent='salvar';btn.classList.remove('saving');}
+    const b=document.getElementById(btnId);
+    if(b){b.textContent='salvar';b.classList.remove('saving');}
     toast('erro ao salvar');
   }
 }
 function updateSubpageMeta(){
-  const cards=document.querySelectorAll('.sp-card');
-  cards.forEach(card=>{
-    const pg=activeSection?.pages.find(p=>{
-      const name=card.querySelector('.sp-name')?.textContent;
-      return p.name===name;
-    });
+  // Update page card snippets in place without re-rendering the whole section
+  document.querySelectorAll('.sp-card').forEach(card=>{
+    const nameEl=card.querySelector('.sp-name');
+    if(!nameEl) return;
+    const pg=activeSection?.pages.find(p=>p.name===nameEl.textContent);
+    if(!pg) return;
+    const snippet=card.querySelector('.sp-snippet');
+    if(snippet) snippet.textContent=(pg.content||'').slice(0,60)||'sem conteúdo';
   });
-  renderSection();
 }
 
 // IMAGES
