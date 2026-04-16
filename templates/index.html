@@ -145,7 +145,7 @@ body{font-family:var(--serif);background:var(--bg);color:var(--text);height:100v
 .editor{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--rl);padding:30px;position:relative}
 .editor-title{font-size:30px;font-weight:400;letter-spacing:-0.02em;background:none;border:none;outline:none;width:100%;color:var(--text);font-family:var(--serif);margin-bottom:18px}
 .editor-title::placeholder{color:var(--hint)}
-.toolbar{display:flex;gap:7px;margin-bottom:14px;padding-bottom:14px;border-bottom:0.5px solid var(--border);flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:10;background:var(--surface);padding-top:6px;margin-top:-6px}
+.toolbar{display:flex;gap:7px;padding:10px 28px;border-bottom:0.5px solid var(--border);flex-wrap:wrap;align-items:center;background:var(--surface);flex-shrink:0}
 .toolbar-right{margin-left:auto}
 .tool{padding:6px 12px;font-size:13px;border:0.5px solid var(--border);border-radius:var(--r);background:var(--surface2);color:var(--muted);cursor:pointer;font-family:var(--mono);transition:all .15s}
 .tool:hover{color:var(--text);border-color:var(--border2)}
@@ -886,6 +886,7 @@ function renderMain(){
       <div class="topbar-right">${exportBtns}</div>
     </div>
     <div class="tabs type-${activeProject.type}">${tabs}</div>
+    <div id="editorToolbar" class="toolbar" style="display:none"></div>
     <div class="content" id="sectionContent"></div>
   `;
   renderSection();
@@ -927,6 +928,7 @@ function renderSection(){
   const isUpload=activeSection.isUpload;
 
   if(isUpload){
+    hideEditorToolbar();
     el.innerHTML=buildPagesGridHTML()+renderUploadSection();
     return;
   }
@@ -942,14 +944,15 @@ function renderSection(){
   // Photo: no toggle, just gallery
   if(isPhoto){
     const spH=buildPagesGridHTML();
-    if(!activePage){el.innerHTML=spH;return;}
+    if(!activePage){hideEditorToolbar();el.innerHTML=spH;return;}
     el.innerHTML=spH+`<div id="pageViewContent"></div>`;
     document.getElementById('pageViewContent').innerHTML=renderPhotoAlbumHTML();
+    hideEditorToolbar();
     return;
   }
 
   const spH=buildPagesGridHTML();
-  if(!activePage){el.innerHTML=spH;return;}
+  if(!activePage){hideEditorToolbar();el.innerHTML=spH;return;}
 
   const isForm=isFormPage();
   const editorH=isForm?`<div id="pageViewContent"></div>`:`
@@ -973,24 +976,29 @@ function setPageView(v){
 
 function renderPageView(){
   const el=document.getElementById('pageViewContent');
-  if(!el||!activePage) return;
+  if(!el||!activePage){hideEditorToolbar();return;}
   if(activeProject?.type==='photo'){
     el.innerHTML=renderPhotoAlbumHTML();
+    hideEditorToolbar();
     return;
   }
   if(isFormPage()){
     el.innerHTML=renderFormPageHTML();
+    hideEditorToolbar();
     return;
   }
   if(boardView==='scenes'){
     el.innerHTML=renderScenesKanban();
+    hideEditorToolbar();
     return;
   }
   if(boardView==='board'){
     el.innerHTML=renderBoardHTML();
+    hideEditorToolbar();
     initBoard();
   } else {
     el.innerHTML=renderEditorHTML();
+    showEditorToolbar();
     setTimeout(initEditorExpand,10);
   }
 }
@@ -1211,6 +1219,28 @@ function getGuideType(){
 
 function toggleGuide(){guideVisible=!guideVisible;renderPageView();}
 
+function showEditorToolbar(){
+  const tb=document.getElementById('editorToolbar');
+  if(!tb) return;
+  const guideType=getGuideType();
+  const guideBtn=guideType?`<button class="tool${guideVisible?' guide-active':''}" onclick="toggleGuide()">✎ guia</button>`:'';
+  tb.style.display='flex';
+  tb.innerHTML=`
+    <button class="tool" onclick="insertText('## ')">## cabeçalho</button>
+    <button class="tool" onclick="insertText('**')">negrito</button>
+    <button class="tool" onclick="insertText('- ')">lista</button>
+    <button class="tool" onclick="insertText('> ')">citação</button>
+    <button class="tool accent" onclick="askAI()">✦ ia ↗</button>
+    ${guideBtn}
+    <button class="tool save-btn" id="saveBtn" onclick="manualSave()" title="salvar agora">salvar</button>
+    <button class="tool expand-btn toolbar-right" onclick="openFullscreenEditor()" title="modo tela cheia">⤢ expandir</button>`;
+}
+
+function hideEditorToolbar(){
+  const tb=document.getElementById('editorToolbar');
+  if(tb){tb.style.display='none';tb.innerHTML='';}
+}
+
 function renderGuidePanel(type){
   const qs=type==='character'?GUIDE_CHAR:GUIDE_STORY;
   const label=type==='character'?'ficha do personagem':'perguntas narrativas';
@@ -1236,24 +1266,11 @@ function insertGuideQ(q){
 function renderEditorHTML(){
   const pg=activePage;
   const guideType=getGuideType();
-  const guideBtn=guideType
-    ?`<button class="tool${guideVisible?' guide-active':''}" onclick="toggleGuide()">✎ guia</button>`
-    :'';
   const guideH=guideType&&guideVisible?renderGuidePanel(guideType):'';
   return `
     <div class="editor-layout">
       <div class="editor">
         <input class="editor-title" placeholder="título..." value="${esc(pg.title||pg.name||'')}" oninput="scheduleSave('title',this.value)" />
-        <div class="toolbar">
-          <button class="tool" onclick="insertText('## ')">## cabeçalho</button>
-          <button class="tool" onclick="insertText('**')">negrito</button>
-          <button class="tool" onclick="insertText('- ')">lista</button>
-          <button class="tool" onclick="insertText('> ')">citação</button>
-          <button class="tool accent" onclick="askAI()">✦ ia ↗</button>
-          ${guideBtn}
-          <button class="tool save-btn" id="saveBtn" onclick="manualSave()" title="salvar agora">salvar</button>
-          <button class="tool expand-btn toolbar-right" onclick="openFullscreenEditor()" title="modo tela cheia">⤢ expandir</button>
-        </div>
         <textarea class="editor-body" id="editorBody" placeholder="escreva suas notas, ideias, pesquisas..." oninput="autoExpandTA(this);scheduleSave('content',this.value)">${esc(pg.content||'')}</textarea>
       </div>
       ${guideH}
@@ -1270,8 +1287,11 @@ function renderEditorHTML(){
 
 // ── AUTO-EXPAND TEXTAREA ──────────────────────────────────────────────────────
 function autoExpandTA(el){
+  const container=document.querySelector('.content');
+  const scrollTop=container?container.scrollTop:0;
   el.style.height='auto';
   el.style.height=el.scrollHeight+'px';
+  if(container) container.scrollTop=scrollTop;
 }
 
 // Called after rendering editor so textarea fits content immediately
@@ -1305,7 +1325,7 @@ function fsInsertText(t){
   if(!ta) return;
   const s=ta.selectionStart;
   ta.value=ta.value.slice(0,s)+t+ta.value.slice(ta.selectionEnd);
-  ta.focus();ta.selectionStart=ta.selectionEnd=s+t.length;
+  ta.focus({preventScroll:true});ta.selectionStart=ta.selectionEnd=s+t.length;
   autoExpandTA(ta);
   scheduleSave('content',ta.value);
 }
@@ -1873,7 +1893,7 @@ function exportPDF(){
 
 // MODAL
 function closeModal(id){document.getElementById(id).classList.remove('open');}
-function insertText(t){const ta=document.getElementById('editorBody');if(!ta) return;const s=ta.selectionStart;ta.value=ta.value.slice(0,s)+t+ta.value.slice(ta.selectionEnd);ta.focus();ta.selectionStart=ta.selectionEnd=s+t.length;scheduleSave('content',ta.value);}
+function insertText(t){const ta=document.getElementById('editorBody');if(!ta) return;const s=ta.selectionStart;ta.value=ta.value.slice(0,s)+t+ta.value.slice(ta.selectionEnd);const container=document.querySelector('.content');const scrollTop=container?container.scrollTop:0;ta.focus({preventScroll:true});ta.selectionStart=ta.selectionEnd=s+t.length;if(container)container.scrollTop=scrollTop;scheduleSave('content',ta.value);}
 function askAI(){toast('funcionalidade de IA em breve');}
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
