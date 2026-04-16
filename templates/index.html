@@ -282,35 +282,56 @@ body{font-family:var(--serif);background:var(--bg);color:var(--text);height:100v
 .k-add{width:100%;padding:6px;font-size:11px;color:var(--muted);background:none;border:0.5px dashed var(--border2);border-radius:var(--r);cursor:pointer;font-family:var(--mono);margin-top:8px;transition:all .15s;text-align:center}
 .k-add:hover{color:var(--text);border-style:solid;background:var(--surface)}
 
+/* NOTEPAD */
+.notes-btn{margin:0 10px 6px;padding:9px 14px;background:none;border:0.5px dashed var(--border2);border-radius:var(--r);font-size:12px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;cursor:pointer;color:var(--hint);width:calc(100% - 20px);text-align:left;display:flex;align-items:center;gap:8px;transition:all .15s}
+.notes-btn:hover{background:var(--gold-l);border-style:solid;border-color:var(--gold);color:var(--text)}
+.notes-btn.active{background:var(--gold-l);border-style:solid;border-color:var(--gold);color:var(--text)}
+.notes-icon{font-size:14px;opacity:.7}
+.notepad-wrap{padding:28px;height:100%;display:flex;flex-direction:column;gap:0}
+.notepad-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-shrink:0}
+.notepad-title-label{font-family:var(--mono);font-size:12px;color:var(--hint);text-transform:uppercase;letter-spacing:.1em}
+.notepad-actions{display:flex;gap:8px}
+.notepad-editor{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--rl);padding:32px;flex:1;display:flex;flex-direction:column}
+.notepad-ta{font-family:var(--serif);font-size:18px;line-height:1.9;color:var(--text);background:none;border:none;outline:none;width:100%;flex:1;resize:none;min-height:500px}
+.notepad-ta::placeholder{color:var(--hint)}
+.notepad-foot{font-family:var(--mono);font-size:11px;color:var(--hint);text-align:right;margin-top:10px;flex-shrink:0}
+
 /* PREVIEW */
 .preview-overlay{display:none;position:fixed;inset:0;background:rgba(28,28,26,.8);z-index:3000;overflow-y:auto;padding:48px 16px 80px}
 .preview-overlay.open{display:block}
 .preview-close-btn{position:fixed;top:16px;right:22px;font-size:30px;color:rgba(255,255,255,.7);cursor:pointer;background:none;border:none;font-family:sans-serif;line-height:1;z-index:3001;transition:color .15s}
 .preview-close-btn:hover{color:#fff}
-/* book page */
-.preview-page{background:#fff;width:560px;max-width:96vw;margin:0 auto 48px;padding:80px 84px 96px;font-family:'EB Garamond',Georgia,serif;color:#1a1a18;box-shadow:0 4px 32px rgba(0,0,0,.35);position:relative;min-height:720px}
-.preview-page+.preview-page{margin-top:0}
+/* page base */
+.preview-page{background:#fff;width:595px;max-width:96vw;margin:0 auto 0;padding:113px 76px 76px 113px;font-family:'EB Garamond',Georgia,serif;color:#1a1a18;box-shadow:0 4px 32px rgba(0,0,0,.35);position:relative;min-height:842px}
+.preview-page+.preview-page{margin-top:0;border-top:1px solid #e8e8e8}
+/* book page overrides — ABNT/editorial standard */
+.preview-page.book-page{font-family:'Times New Roman',Times,Georgia,serif;font-size:15px}
 /* cover */
-.pv-cover{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:560px;text-align:center;gap:0}
-.pv-cover-title{font-size:32px;font-weight:400;letter-spacing:.04em;text-transform:uppercase;margin-bottom:14px;line-height:1.25}
-.pv-cover-rule{width:36px;border:none;border-top:1px solid #ccc;margin:0 auto 14px}
+.pv-cover{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:640px;text-align:center;gap:0}
+.pv-cover-title{font-size:34px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;margin-bottom:10px;line-height:1.2}
+.pv-cover-subtitle{font-size:18px;font-style:italic;color:#444;margin-bottom:20px;line-height:1.4}
+.pv-cover-rule{width:48px;border:none;border-top:1px solid #999;margin:0 auto 18px}
 .pv-cover-type{font-family:'Gelato','Courier New',monospace;font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.18em}
 .pv-cover-date{font-family:'Gelato','Courier New',monospace;font-size:10px;color:#ccc;margin-top:6px;letter-spacing:.1em}
 /* chapter heading */
 .pv-chapter-label{font-family:'Gelato','Courier New',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.22em;text-align:center;color:#aaa;margin-bottom:10px}
-.pv-chapter-title{font-size:20px;font-weight:400;text-transform:uppercase;letter-spacing:.1em;text-align:center;margin-bottom:8px}
-.pv-chapter-subtitle{font-size:17px;font-style:italic;text-align:center;color:#555;margin-bottom:36px}
-.pv-chapter-hr{border:none;border-top:0.5px solid #ddd;width:44px;margin:0 auto 36px}
-/* body text */
+.pv-chapter-title{font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;text-align:center;margin-bottom:6px}
+.pv-chapter-subtitle{font-size:15px;font-style:italic;text-align:center;color:#555;margin-bottom:40px}
+.pv-chapter-hr{border:none;border-top:0.5px solid #ddd;width:44px;margin:0 auto 40px}
+/* body text — default (editorial/garamond) */
 .pv-body{margin:0}
-.pv-body p{font-size:15.5px;line-height:2;color:#1a1a18;margin:0;text-indent:1.8em}
+.pv-body p{font-size:15px;line-height:1.5;color:#1a1a18;margin:0;text-indent:1.25cm;text-align:justify}
 .pv-body p.first-p{text-indent:0}
-.pv-body p.dialogue{text-indent:1.8em}
+/* body text — book type (Times New Roman 12pt editorial) */
+.book-page .pv-body p{font-family:'Times New Roman',Times,Georgia,serif;font-size:15px;line-height:1.5;text-indent:1.25cm;text-align:justify;margin:0}
+.book-page .pv-body p.first-p{text-indent:0}
+.book-page .pv-chapter-title{font-family:'Times New Roman',Times,Georgia,serif;font-size:17px;font-weight:700}
 /* scene separator */
 .pv-scene-sep{text-align:center;color:#bbb;margin:28px 0;font-size:12px;letter-spacing:.5em}
 .pv-scene-title{font-family:'Gelato','Courier New',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.18em;color:#aaa;margin:28px 0 14px;text-align:center}
-/* page number */
-.pv-page-num{position:absolute;bottom:38px;left:0;right:0;text-align:center;font-family:'Gelato','Courier New',monospace;font-size:10px;color:#bbb;letter-spacing:.1em}
+/* page number — rodapé à direita (padrão editorial) */
+.pv-page-num{position:absolute;bottom:30px;right:76px;font-family:'Times New Roman',Times,serif;font-size:11px;color:#888}
+.pv-page-num.center{right:0;left:0;text-align:center}
 .pv-empty{color:#bbb;font-size:14px;font-style:italic;text-align:center;padding:40px 0}
 
 /* SCENE EDIT MODAL */
@@ -402,6 +423,9 @@ body{font-family:var(--serif);background:var(--bg);color:var(--text);height:100v
   </div>
   <button class="new-btn" onclick="openNewProject()">
     <span class="plus">+</span> novo projeto
+  </button>
+  <button class="notes-btn" id="notesBtnSidebar" onclick="openNotepad()">
+    <span class="notes-icon">✎</span> bloco de notas
   </button>
   <div class="projects" id="projectsList"></div>
   <div class="sidebar-foot">
@@ -579,6 +603,74 @@ async function loadProjects(){
   renderSidebar();
 }
 
+// ── NOTEPAD ───────────────────────────────────────────────────────────────────
+let _notesContent='';
+let _notesSaveTimer=null;
+let _notesOpen=false;
+
+async function openNotepad(){
+  _notesOpen=true;
+  activeProject=null;
+  document.querySelectorAll('.proj-item').forEach(el=>el.classList.remove('active'));
+  const btn=document.getElementById('notesBtnSidebar');
+  if(btn) btn.classList.add('active');
+  // load from server
+  try{
+    const d=await api('GET','/api/notes');
+    _notesContent=d.content||'';
+  }catch(e){ _notesContent=''; }
+  document.getElementById('mainContent').innerHTML=renderNotepadHTML();
+  const ta=document.getElementById('notesTA');
+  if(ta){ta.value=_notesContent;autoExpandTA(ta);ta.focus();}
+}
+
+function renderNotepadHTML(){
+  return `<div class="notepad-wrap">
+    <div class="notepad-header">
+      <span class="notepad-title-label">✎ bloco de notas</span>
+      <div class="notepad-actions">
+        <button class="tool save-btn" id="notesSaveBtn" onclick="saveNotepad(true)">salvar</button>
+      </div>
+    </div>
+    <div class="notepad-editor">
+      <textarea class="notepad-ta" id="notesTA"
+        placeholder="ideias, insights, citações, qualquer coisa que não cabe num projeto específico..."
+        oninput="scheduleNotesSave(this)"></textarea>
+    </div>
+    <div class="notepad-foot" id="notesFoot"></div>
+  </div>`;
+}
+
+function scheduleNotesSave(el){
+  _notesContent=el.value;
+  autoExpandTA(el);
+  clearTimeout(_notesSaveTimer);
+  _notesSaveTimer=setTimeout(()=>saveNotepad(false),1000);
+}
+
+async function saveNotepad(manual){
+  const btnId='notesSaveBtn';
+  if(manual){
+    const b=document.getElementById(btnId);
+    if(b){b.textContent='salvando…';b.classList.add('saving');}
+  }
+  try{
+    await api('PUT','/api/notes',{content:_notesContent});
+    if(manual){
+      const b=document.getElementById(btnId);
+      if(b){b.textContent='salvo ✓';b.classList.remove('saving');b.classList.add('saved');}
+      setTimeout(()=>{const b2=document.getElementById(btnId);if(b2){b2.textContent='salvar';b2.classList.remove('saved');}},2000);
+    }
+    const foot=document.getElementById('notesFoot');
+    const words=_notesContent.trim()?_notesContent.trim().split(/\s+/).length:0;
+    if(foot) foot.textContent=`${words} palavras`;
+  }catch(e){
+    if(manual) toast('erro ao salvar notas');
+    const b=document.getElementById(btnId);
+    if(b){b.textContent='salvar';b.classList.remove('saving');}
+  }
+}
+
 const TYPE_META={
   doc:{label:'documentários',dot:'dot-doc',badge:'badge-doc',short:'doc'},
   book:{label:'livros',dot:'dot-book',badge:'badge-book',short:'livro'},
@@ -607,6 +699,9 @@ function renderSidebar(){
 }
 
 function selectProject(id){
+  _notesOpen=false;
+  const nb=document.getElementById('notesBtnSidebar');
+  if(nb) nb.classList.remove('active');
   activeProject=projects.find(p=>p.id===id);
   if(!activeProject) return;
   activeSection=activeProject.sections[0];
@@ -1700,19 +1795,22 @@ const PREVIEW_SECTIONS={
 function openPreview(){
   if(!activeProject) return;
   const {pt}=TYPE_COLORS[activeProject.type]||TYPE_COLORS.doc;
+  const isBook=activeProject.type==='book';
+  const pageClass=isBook?'preview-page book-page':'preview-page';
+  const numClass=isBook?'pv-page-num':'pv-page-num center';
   const created=(activeProject.created||'').slice(0,10);
   const allowedSecs=PREVIEW_SECTIONS[activeProject.type]||[];
   let pages=[];
 
   // Cover page
-  pages.push(`<div class="preview-page">
+  pages.push(`<div class="${pageClass}">
     <div class="pv-cover">
       <div class="pv-cover-title">${esc(activeProject.name)}</div>
       <hr class="pv-cover-rule">
       <div class="pv-cover-type">${esc(pt)}</div>
       <div class="pv-cover-date">${created}</div>
     </div>
-    <div class="pv-page-num">—</div>
+    <div class="${numClass}">—</div>
   </div>`);
 
   let pageNum=1;
@@ -1736,13 +1834,13 @@ function openPreview(){
         });
 
         pageNum++;
-        pages.push(`<div class="preview-page">
+        pages.push(`<div class="${pageClass}">
           <div class="pv-chapter-label">${esc(sec.label)}</div>
           <div class="pv-chapter-title">${esc(chapTitle)}</div>
           ${subtitle?`<div class="pv-chapter-subtitle">${esc(subtitle)}</div>`:''}
           <hr class="pv-chapter-hr">
           ${body||'<div class="pv-empty">em branco</div>'}
-          <div class="pv-page-num">${pageNum}</div>
+          <div class="${numClass}">${pageNum}</div>
         </div>`);
       });
     });

@@ -186,6 +186,21 @@ def index():
     data = load_data()
     return render_template('index.html', projects=data['projects'])
 
+# ── Notes API ─────────────────────────────────────────────────────────────────
+@app.route('/api/notes', methods=['GET'])
+@require_auth
+def get_notes():
+    data = load_data()
+    return jsonify({'content': data.get('notes', '')})
+
+@app.route('/api/notes', methods=['PUT'])
+@require_auth
+def save_notes():
+    data = load_data()
+    data['notes'] = request.json.get('content', '')
+    save_data(data)
+    return jsonify({'ok': True})
+
 # ── Project API ───────────────────────────────────────────────────────────────
 @app.route('/api/projects', methods=['GET'])
 @require_auth
