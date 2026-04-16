@@ -322,14 +322,26 @@ body{font-family:var(--serif);background:var(--bg);color:var(--text);height:100v
 .notes-btn:hover{background:var(--gold-l);border-style:solid;border-color:var(--gold);color:var(--text)}
 .notes-btn.active{background:var(--gold-l);border-style:solid;border-color:var(--gold);color:var(--text)}
 .notes-icon{font-size:14px;opacity:.7}
-.notepad-wrap{padding:28px;height:100%;display:flex;flex-direction:column;gap:0}
-.notepad-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-shrink:0}
+.notepad-wrap{padding:28px;overflow-y:auto;height:100%}
+.notepad-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
 .notepad-title-label{font-family:var(--mono);font-size:12px;color:var(--hint);text-transform:uppercase;letter-spacing:.1em}
-.notepad-actions{display:flex;gap:8px}
-.notepad-editor{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--rl);padding:32px;flex:1;display:flex;flex-direction:column}
-.notepad-ta{font-family:var(--serif);font-size:18px;line-height:1.9;color:var(--text);background:none;border:none;outline:none;width:100%;flex:1;resize:none;min-height:500px}
-.notepad-ta::placeholder{color:var(--hint)}
-.notepad-foot{font-family:var(--mono);font-size:11px;color:var(--hint);text-align:right;margin-top:10px;flex-shrink:0}
+.notepad-add-btn{padding:8px 18px;font-size:12px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;background:var(--gold);color:#fff;border:none;border-radius:var(--r);cursor:pointer;transition:opacity .15s}
+.notepad-add-btn:hover{opacity:.85}
+.notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;align-items:start}
+.note-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--rl);padding:22px 22px 14px;display:flex;flex-direction:column;gap:10px;position:relative;transition:box-shadow .15s}
+.note-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.07)}
+.note-card-title{font-family:var(--mono);font-size:13px;background:none;border:none;outline:none;width:100%;color:var(--text);font-weight:500;letter-spacing:.02em;border-bottom:0.5px solid transparent;padding-bottom:4px;transition:border-color .15s}
+.note-card-title:focus{border-bottom-color:var(--border2)}
+.note-card-title::placeholder{color:var(--hint);font-weight:400}
+.note-card-ta{font-family:var(--serif);font-size:16px;line-height:1.8;color:var(--text);background:none;border:none;outline:none;width:100%;resize:none;min-height:120px;overflow:hidden}
+.note-card-ta::placeholder{color:var(--hint)}
+.note-card-foot{display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:0.5px solid var(--border)}
+.note-card-words{font-family:var(--mono);font-size:10px;color:var(--hint)}
+.note-card-status{font-family:var(--mono);font-size:10px;color:var(--hint);transition:color .2s}
+.note-card-status.saved{color:var(--book)}
+.note-card-del{background:none;border:none;color:var(--hint);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px;transition:all .15s;opacity:0}
+.note-card:hover .note-card-del{opacity:1}
+.note-card-del:hover{background:var(--photo-l);color:var(--photo)}
 
 /* PREVIEW */
 .preview-overlay{display:none;position:fixed;inset:0;background:rgba(28,28,26,.8);z-index:3000;overflow-y:auto;padding:72px 16px 80px}
@@ -691,8 +703,8 @@ async function loadProjects(){
 }
 
 // ── NOTEPAD ───────────────────────────────────────────────────────────────────
-let _notesContent='';
-let _notesSaveTimer=null;
+let _notes=[];
+let _noteSaveTimers={};
 let _notesOpen=false;
 
 async function openNotepad(){
@@ -701,61 +713,104 @@ async function openNotepad(){
   document.querySelectorAll('.proj-item').forEach(el=>el.classList.remove('active'));
   const btn=document.getElementById('notesBtnSidebar');
   if(btn) btn.classList.add('active');
-  // load from server
   try{
     const d=await api('GET','/api/notes');
-    _notesContent=d.content||'';
-  }catch(e){ _notesContent=''; }
-  document.getElementById('mainContent').innerHTML=renderNotepadHTML();
-  const ta=document.getElementById('notesTA');
-  if(ta){ta.value=_notesContent;autoExpandTA(ta);ta.focus();}
+    _notes=d.notes||[];
+  }catch(e){ _notes=[]; }
+  renderNotepad();
 }
 
-function renderNotepadHTML(){
-  return `<div class="notepad-wrap">
+function renderNotepad(){
+  const mc=document.getElementById('mainContent');
+  mc.innerHTML=`<div class="notepad-wrap">
     <div class="notepad-header">
       <span class="notepad-title-label">✎ bloco de notas</span>
-      <div class="notepad-actions">
-        <button class="tool save-btn" id="notesSaveBtn" onclick="saveNotepad(true)">salvar</button>
-      </div>
+      <button class="notepad-add-btn" onclick="addNote()">+ nova nota</button>
     </div>
-    <div class="notepad-editor">
-      <textarea class="notepad-ta" id="notesTA"
-        placeholder="ideias, insights, citações, qualquer coisa que não cabe num projeto específico..."
-        oninput="scheduleNotesSave(this)"></textarea>
-    </div>
-    <div class="notepad-foot" id="notesFoot"></div>
+    <div class="notes-grid" id="notesGrid">${renderNoteCards()}</div>
   </div>`;
+  // expand all textareas
+  mc.querySelectorAll('.note-card-ta').forEach(ta=>autoExpandTA(ta));
 }
 
-function scheduleNotesSave(el){
-  _notesContent=el.value;
-  autoExpandTA(el);
-  clearTimeout(_notesSaveTimer);
-  _notesSaveTimer=setTimeout(()=>saveNotepad(false),1000);
+function renderNoteCards(){
+  if(!_notes.length) return `<div style="font-family:var(--mono);font-size:13px;color:var(--hint);padding:40px 0;text-align:center;grid-column:1/-1">clique em + nova nota para começar</div>`;
+  return _notes.map(n=>`
+    <div class="note-card" id="nc-${n.id}">
+      <input class="note-card-title" placeholder="título da nota..." value="${esc(n.title||'')}"
+        oninput="scheduleNoteSave('${n.id}','title',this.value)" />
+      <textarea class="note-card-ta" placeholder="escreva aqui..."
+        oninput="scheduleNoteSave('${n.id}','content',this.value);autoExpandTA(this)">${esc(n.content||'')}</textarea>
+      <div class="note-card-foot">
+        <span class="note-card-words" id="nw-${n.id}">${wordCount(n.content||'')} palavras</span>
+        <span class="note-card-status" id="ns-${n.id}"></span>
+        <button class="note-card-del" onclick="deleteNote('${n.id}')" title="excluir">✕</button>
+      </div>
+    </div>`).join('');
 }
 
-async function saveNotepad(manual){
-  const btnId='notesSaveBtn';
-  if(manual){
-    const b=document.getElementById(btnId);
-    if(b){b.textContent='salvando…';b.classList.add('saving');}
+function wordCount(s){ return s.trim()?s.trim().split(/\s+/).length:0; }
+
+function scheduleNoteSave(id,field,val){
+  const note=_notes.find(n=>n.id===id);
+  if(!note) return;
+  note[field]=val;
+  // update word count live
+  if(field==='content'){
+    const wc=document.getElementById('nw-'+id);
+    if(wc) wc.textContent=wordCount(val)+' palavras';
   }
+  clearTimeout(_noteSaveTimers[id]);
+  _noteSaveTimers[id]=setTimeout(()=>saveNote(id),900);
+}
+
+async function saveNote(id){
+  const note=_notes.find(n=>n.id===id);
+  if(!note) return;
+  const st=document.getElementById('ns-'+id);
   try{
-    await api('PUT','/api/notes',{content:_notesContent});
-    if(manual){
-      const b=document.getElementById(btnId);
-      if(b){b.textContent='salvo ✓';b.classList.remove('saving');b.classList.add('saved');}
-      setTimeout(()=>{const b2=document.getElementById(btnId);if(b2){b2.textContent='salvar';b2.classList.remove('saved');}},2000);
-    }
-    const foot=document.getElementById('notesFoot');
-    const words=_notesContent.trim()?_notesContent.trim().split(/\s+/).length:0;
-    if(foot) foot.textContent=`${words} palavras`;
+    await api('PUT',`/api/notes/${id}`,{title:note.title,content:note.content});
+    if(st){st.textContent='salvo ✓';st.classList.add('saved');setTimeout(()=>{st.textContent='';st.classList.remove('saved');},2000);}
   }catch(e){
-    if(manual) toast('erro ao salvar notas');
-    const b=document.getElementById(btnId);
-    if(b){b.textContent='salvar';b.classList.remove('saving');}
+    if(st){st.textContent='erro';}
   }
+}
+
+async function addNote(){
+  try{
+    const note=await api('POST','/api/notes',{});
+    _notes.unshift(note);
+    const grid=document.getElementById('notesGrid');
+    if(grid){
+      const div=document.createElement('div');
+      div.innerHTML=`<div class="note-card" id="nc-${note.id}">
+        <input class="note-card-title" placeholder="título da nota..." value=""
+          oninput="scheduleNoteSave('${note.id}','title',this.value)" />
+        <textarea class="note-card-ta" placeholder="escreva aqui..."
+          oninput="scheduleNoteSave('${note.id}','content',this.value);autoExpandTA(this)"></textarea>
+        <div class="note-card-foot">
+          <span class="note-card-words" id="nw-${note.id}">0 palavras</span>
+          <span class="note-card-status" id="ns-${note.id}"></span>
+          <button class="note-card-del" onclick="deleteNote('${note.id}')" title="excluir">✕</button>
+        </div>
+      </div>`;
+      // remove empty state if present
+      const empty=grid.querySelector('[style*="grid-column"]');
+      if(empty) empty.remove();
+      grid.prepend(div.firstElementChild);
+      grid.querySelector(`#nc-${note.id} .note-card-title`)?.focus();
+    }
+  }catch(e){ toast('erro ao criar nota'); }
+}
+
+async function deleteNote(id){
+  if(!confirm('excluir esta nota?')) return;
+  await api('DELETE',`/api/notes/${id}`);
+  _notes=_notes.filter(n=>n.id!==id);
+  const card=document.getElementById('nc-'+id);
+  if(card) card.remove();
+  const grid=document.getElementById('notesGrid');
+  if(grid&&!grid.children.length) grid.innerHTML=`<div style="font-family:var(--mono);font-size:13px;color:var(--hint);padding:40px 0;text-align:center;grid-column:1/-1">clique em + nova nota para começar</div>`;
 }
 
 const TYPE_META={

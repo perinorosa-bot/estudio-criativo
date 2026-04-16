@@ -207,17 +207,54 @@ def index():
     return render_template('index.html', projects=data['projects'])
 
 # ── Notes API ─────────────────────────────────────────────────────────────────
+def _load_notes(data):
+    """Migrate old string format to list of cards."""
+    raw = data.get('notes', [])
+    if isinstance(raw, str):
+        # legacy: convert single string to one card
+        cards = [{'id': str(uuid.uuid4()), 'title': '', 'content': raw,
+                  'created': datetime.utcnow().isoformat()}] if raw.strip() else []
+        data['notes'] = cards
+        return cards
+    return raw
+
 @app.route('/api/notes', methods=['GET'])
 @require_auth
 def get_notes():
     data = load_data()
-    return jsonify({'content': data.get('notes', '')})
+    return jsonify({'notes': _load_notes(data)})
 
-@app.route('/api/notes', methods=['PUT'])
+@app.route('/api/notes', methods=['POST'])
 @require_auth
-def save_notes():
+def create_note():
     data = load_data()
-    data['notes'] = request.json.get('content', '')
+    _load_notes(data)
+    note = {'id': str(uuid.uuid4()), 'title': '', 'content': '',
+            'created': datetime.utcnow().isoformat()}
+    data['notes'].append(note)
+    save_data(data)
+    return jsonify(note)
+
+@app.route('/api/notes/<nid>', methods=['PUT'])
+@require_auth
+def update_note(nid):
+    data = load_data()
+    _load_notes(data)
+    note = next((n for n in data['notes'] if n['id'] == nid), None)
+    if not note: abort(404)
+    body = request.json
+    if 'title' in body: note['title'] = body['title']
+    if 'content' in body: note['content'] = body['content']
+    note['updated'] = datetime.utcnow().isoformat()
+    save_data(data)
+    return jsonify(note)
+
+@app.route('/api/notes/<nid>', methods=['DELETE'])
+@require_auth
+def delete_note(nid):
+    data = load_data()
+    _load_notes(data)
+    data['notes'] = [n for n in data['notes'] if n['id'] != nid]
     save_data(data)
     return jsonify({'ok': True})
 
