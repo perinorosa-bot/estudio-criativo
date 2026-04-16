@@ -131,11 +131,29 @@ def _restore_from_drive():
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+SNAPSHOTS_DIR = _data_dir / 'snapshots'
+SNAPSHOTS_DIR.mkdir(parents=True, exist_ok=True)
+MAX_SNAPSHOTS = 20
+
 def load_data():
     if DATA_FILE.exists():
         with open(DATA_FILE, encoding='utf-8') as f:
             return json.load(f)
-    return {"projects": []}
+    return {"projects": [], "archive": [], "notes": ""}
+
+def _write_snapshot(data):
+    """Save a timestamped copy of projects.json. Keep only MAX_SNAPSHOTS most recent."""
+    try:
+        ts = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+        snap = SNAPSHOTS_DIR / f'snapshot_{ts}.json'
+        with open(snap, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        # rotate: delete oldest if over limit
+        snaps = sorted(SNAPSHOTS_DIR.glob('snapshot_*.json'))
+        for old in snaps[:-MAX_SNAPSHOTS]:
+            old.unlink(missing_ok=True)
+    except Exception as e:
+        logging.warning(f'[snapshot] failed: {e}')
 
 def save_data(data):
     DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -143,7 +161,9 @@ def save_data(data):
     with open(tmp, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     tmp.replace(DATA_FILE)
-    # async backup to Google Drive — never blocks the request
+    # level-2: rolling snapshot (async so it never blocks)
+    threading.Thread(target=_write_snapshot, args=(data,), daemon=True).start()
+    # level-3: Google Drive backup
     _backup_file_to_drive(DATA_FILE, 'projects.json')
 
 def find_page(data, pid, sid, pgid):
@@ -226,10 +246,75 @@ def create_project():
 @app.route('/api/projects/<pid>', methods=['DELETE'])
 @require_auth
 def delete_project(pid):
+    """Level-1: soft delete — moves project to archive."""
     data = load_data()
+    project = next((p for p in data['projects'] if p['id'] == pid), None)
+    if not project: abort(404)
     data['projects'] = [p for p in data['projects'] if p['id'] != pid]
+    if 'archive' not in data:
+        data['archive'] = []
+    project['archived_at'] = datetime.utcnow().isoformat()
+    data['archive'].append(project)
     save_data(data)
     return jsonify({'ok': True})
+
+@app.route('/api/archive', methods=['GET'])
+@require_auth
+def get_archive():
+    data = load_data()
+    return jsonify({'archive': data.get('archive', [])})
+
+@app.route('/api/archive/<pid>/restore', methods=['POST'])
+@require_auth
+def restore_project(pid):
+    data = load_data()
+    project = next((p for p in data.get('archive', []) if p['id'] == pid), None)
+    if not project: abort(404)
+    data['archive'] = [p for p in data['archive'] if p['id'] != pid]
+    project.pop('archived_at', None)
+    data['projects'].append(project)
+    save_data(data)
+    return jsonify(project)
+
+@app.route('/api/archive/<pid>', methods=['DELETE'])
+@require_auth
+def permanent_delete(pid):
+    """Permanently remove from archive. No recovery possible."""
+    data = load_data()
+    if 'archive' not in data: abort(404)
+    data['archive'] = [p for p in data['archive'] if p['id'] != pid]
+    save_data(data)
+    return jsonify({'ok': True})
+
+@app.route('/api/snapshots', methods=['GET'])
+@require_auth
+def list_snapshots():
+    snaps = sorted(SNAPSHOTS_DIR.glob('snapshot_*.json'), reverse=True)
+    result = []
+    for s in snaps[:MAX_SNAPSHOTS]:
+        stat = s.stat()
+        result.append({
+            'name': s.name,
+            'ts': s.stem.replace('snapshot_', ''),
+            'size_kb': round(stat.st_size / 1024, 1)
+        })
+    return jsonify({'snapshots': result})
+
+@app.route('/api/snapshots/<name>/restore', methods=['POST'])
+@require_auth
+def restore_snapshot(name):
+    """Restore a full snapshot. Current state is auto-saved as a snapshot first."""
+    if not name.startswith('snapshot_') or not name.endswith('.json'):
+        abort(400)
+    snap_path = SNAPSHOTS_DIR / name
+    if not snap_path.exists(): abort(404)
+    # save current state as snapshot before overwriting
+    current = load_data()
+    _write_snapshot(current)
+    with open(snap_path, encoding='utf-8') as f:
+        restored = json.load(f)
+    save_data(restored)
+    return jsonify({'ok': True, 'projects': len(restored.get('projects', []))})
 
 @app.route('/api/projects/<pid>/sections/<sid>/pages', methods=['POST'])
 @require_auth
@@ -266,6 +351,16 @@ def update_page(pid, sid, pgid):
     page = next((pg for pg in section['pages'] if pg['id'] == pgid), None)
     if not page: abort(404)
     body = request.json
+    # level-3: keep last 10 versions of content before overwriting
+    if 'content' in body and body['content'] != page.get('content', ''):
+        history = page.get('content_history', [])
+        if page.get('content', '').strip():
+            history.append({
+                'content': page['content'],
+                'title': page.get('title', ''),
+                'saved_at': datetime.utcnow().isoformat()
+            })
+        page['content_history'] = history[-10:]  # keep last 10
     allowed = {'title', 'content', 'scenes', 'images', 'board_cards', 'board_connections', 'form_answers'}
     for k, v in body.items():
         if k in allowed:

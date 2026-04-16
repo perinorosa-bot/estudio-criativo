@@ -50,9 +50,44 @@ body{font-family:var(--serif);background:var(--bg);color:var(--text);height:100v
 .badge{font-family:var(--mono);font-size:11px;font-weight:500;padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em}
 .badge-doc{background:var(--doc-l);color:var(--doc)}
 .badge-book{background:var(--book-l);color:var(--book)}
-.sidebar-foot{padding:12px 14px;border-top:0.5px solid var(--border)}
-.logout-link{font-family:var(--mono);font-size:13px;color:var(--hint);text-decoration:none;text-transform:uppercase;letter-spacing:.06em;transition:color .15s}
+.sidebar-foot{padding:10px 14px;border-top:0.5px solid var(--border);display:flex;flex-direction:column;gap:6px}
+.sidebar-foot-row{display:flex;align-items:center;justify-content:space-between}
+.logout-link{font-family:var(--mono);font-size:12px;color:var(--hint);text-decoration:none;text-transform:uppercase;letter-spacing:.06em;transition:color .15s}
 .logout-link:hover{color:var(--muted)}
+.archive-toggle{font-family:var(--mono);font-size:12px;color:var(--hint);background:none;border:none;cursor:pointer;text-transform:uppercase;letter-spacing:.06em;padding:0;transition:color .15s;display:flex;align-items:center;gap:4px}
+.archive-toggle:hover{color:var(--muted)}
+.archive-section{padding:4px 8px 8px;border-top:0.5px dashed var(--border)}
+.archive-item{padding:8px 10px;border-radius:var(--r);display:flex;align-items:center;gap:8px;font-size:13px;font-family:var(--mono);color:var(--hint);margin-bottom:2px}
+.archive-item-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:line-through;opacity:.7}
+.archive-restore{font-size:11px;font-family:var(--mono);background:var(--book-l);color:var(--book);border:none;border-radius:4px;padding:3px 8px;cursor:pointer;flex-shrink:0;transition:opacity .15s}
+.archive-restore:hover{opacity:.8}
+.archive-permdel{font-size:11px;font-family:var(--mono);background:none;color:var(--hint);border:none;padding:3px 6px;cursor:pointer;flex-shrink:0;transition:color .15s}
+.archive-permdel:hover{color:var(--photo)}
+.archive-empty{font-family:var(--mono);font-size:11px;color:var(--hint);text-align:center;padding:12px 0;opacity:.6}
+
+/* HISTORY PANEL */
+.history-panel{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--rl);padding:16px;margin-top:14px}
+.history-head{font-family:var(--mono);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:var(--hint);margin-bottom:10px}
+.history-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px}
+.history-item:last-child{border-bottom:none}
+.history-ts{font-family:var(--mono);font-size:11px;color:var(--hint);flex-shrink:0}
+.history-preview{flex:1;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--serif);font-size:13px}
+.history-restore-btn{font-family:var(--mono);font-size:11px;background:none;border:0.5px solid var(--border2);border-radius:4px;padding:3px 8px;color:var(--muted);cursor:pointer;transition:all .15s;flex-shrink:0}
+.history-restore-btn:hover{background:var(--book-l);color:var(--book);border-color:var(--book)}
+
+/* SNAPSHOTS MODAL */
+.snap-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:4000;align-items:center;justify-content:center}
+.snap-modal.open{display:flex}
+.snap-inner{background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--rl);padding:28px;width:500px;max-width:94vw;max-height:80vh;display:flex;flex-direction:column;gap:14px}
+.snap-inner h3{font-size:17px;font-weight:400;font-family:var(--serif);margin:0}
+.snap-inner p{font-size:13px;color:var(--muted);margin:0;font-family:var(--mono)}
+.snap-list{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px}
+.snap-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:var(--r);border:0.5px solid var(--border)}
+.snap-ts{font-family:var(--mono);font-size:12px;color:var(--muted);flex:1}
+.snap-size{font-family:var(--mono);font-size:11px;color:var(--hint)}
+.snap-restore-btn{font-family:var(--mono);font-size:12px;background:var(--text);color:#fff;border:none;border-radius:4px;padding:5px 12px;cursor:pointer;transition:opacity .15s}
+.snap-restore-btn:hover{opacity:.8}
+.snap-close{font-family:var(--mono);font-size:12px;background:none;border:0.5px solid var(--border2);border-radius:var(--r);padding:7px 16px;color:var(--muted);cursor:pointer;align-self:flex-end;text-transform:uppercase;letter-spacing:.05em}
 
 /* MAIN */
 .main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
@@ -441,7 +476,12 @@ body{font-family:var(--serif);background:var(--bg);color:var(--text);height:100v
     <span class="notes-icon">✎</span> bloco de notas
   </button>
   <div class="projects" id="projectsList"></div>
+  <div id="archiveSection" style="display:none" class="archive-section"></div>
   <div class="sidebar-foot">
+    <div class="sidebar-foot-row">
+      <button class="archive-toggle" id="archiveToggleBtn" onclick="toggleArchive()">⬡ arquivo</button>
+      <button class="archive-toggle" onclick="openSnapshotsModal()" title="histórico de backups">↺ backups</button>
+    </div>
     <a href="/logout" class="logout-link">sair</a>
   </div>
 </div>
@@ -538,15 +578,37 @@ body{font-family:var(--serif);background:var(--bg);color:var(--text);height:100v
   <div id="previewContent"></div>
 </div>
 
-<!-- DELETE CONFIRM MODAL -->
+<!-- DELETE CONFIRM MODAL (moves to archive) -->
 <div class="del-modal" id="delModal">
   <div class="del-inner">
-    <h3>excluir projeto?</h3>
-    <p>O projeto <strong id="delProjectName"></strong> será removido permanentemente.<br>Esta ação não pode ser desfeita.</p>
+    <h3>mover para o arquivo?</h3>
+    <p>O projeto <strong id="delProjectName"></strong> será movido para o arquivo.<br>Você pode restaurá-lo a qualquer momento.</p>
     <div class="del-actions">
       <button class="del-cancel" onclick="closeModal('delModal')">cancelar</button>
-      <button class="del-confirm" onclick="confirmDeleteProject()">sim, excluir</button>
+      <button class="del-confirm" onclick="confirmDeleteProject()">mover para arquivo</button>
     </div>
+  </div>
+</div>
+
+<!-- PERMANENT DELETE CONFIRM -->
+<div class="del-modal" id="permDelModal">
+  <div class="del-inner">
+    <h3>excluir permanentemente?</h3>
+    <p><strong id="permDelName"></strong> será apagado para sempre.<br>Esta ação <strong>não pode ser desfeita.</strong></p>
+    <div class="del-actions">
+      <button class="del-cancel" onclick="closeModal('permDelModal')">cancelar</button>
+      <button class="del-confirm" onclick="confirmPermDelete()">sim, apagar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SNAPSHOTS MODAL -->
+<div class="snap-modal" id="snapshotsModal">
+  <div class="snap-inner">
+    <h3>backups automáticos</h3>
+    <p>Cada salvamento cria uma cópia. Restaurar substitui o estado atual (o estado atual é salvo antes).</p>
+    <div class="snap-list" id="snapList"></div>
+    <button class="snap-close" onclick="closeModal('snapshotsModal')">fechar</button>
   </div>
 </div>
 
@@ -1634,12 +1696,118 @@ async function confirmDeleteProject(){
   projects=projects.filter(p=>p.id!==activeProject.id);
   activeProject=null;
   renderSidebar();
+  toast('projeto movido para o arquivo');
   document.getElementById('mainContent').innerHTML=`<div class="empty" style="height:100%">
     <div class="inspiration"><div class="inspiration-quote">&ldquo;Story is not about what happens — it&rsquo;s about how what happens affects and transforms the characters.&rdquo;</div><div class="inspiration-attr">— Robert McKee</div></div>
     <div class="empty-icon">✦</div>
     <div class="empty-title">selecione ou crie um projeto</div>
     <div class="empty-sub">documentários e livros em um só lugar</div>
   </div>`;
+}
+
+// ── ARCHIVE ───────────────────────────────────────────────────────────────────
+let _archiveOpen=false;
+let _archiveData=[];
+let _permDelId=null;
+
+async function toggleArchive(){
+  _archiveOpen=!_archiveOpen;
+  const btn=document.getElementById('archiveToggleBtn');
+  if(!_archiveOpen){
+    document.getElementById('archiveSection').style.display='none';
+    if(btn) btn.style.opacity='1';
+    return;
+  }
+  if(btn) btn.style.opacity='.6';
+  try{
+    const d=await api('GET','/api/archive');
+    _archiveData=d.archive||[];
+  }catch(e){ _archiveData=[]; }
+  renderArchiveSection();
+  document.getElementById('archiveSection').style.display='block';
+}
+
+function renderArchiveSection(){
+  const el=document.getElementById('archiveSection');
+  if(!el) return;
+  if(!_archiveData.length){
+    el.innerHTML=`<div class="archive-empty">arquivo vazio</div>`;
+    return;
+  }
+  el.innerHTML=_archiveData.map(p=>{
+    const date=(p.archived_at||'').slice(0,10);
+    const tc=TYPE_COLORS[p.type]||TYPE_COLORS.doc;
+    return `<div class="archive-item">
+      <span class="dot" style="background:${tc.ac};opacity:.5"></span>
+      <span class="archive-item-name" title="${esc(p.name)}">${esc(p.name)}</span>
+      <button class="archive-restore" onclick="restoreProject('${p.id}')">restaurar</button>
+      <button class="archive-permdel" onclick="askPermDelete('${p.id}','${esc(p.name)}')" title="excluir permanentemente">✕</button>
+    </div>`;
+  }).join('');
+}
+
+async function restoreProject(pid){
+  await api('POST',`/api/archive/${pid}/restore`);
+  const p=_archiveData.find(x=>x.id===pid);
+  _archiveData=_archiveData.filter(x=>x.id!==pid);
+  if(p){ p.archived_at=undefined; projects.push(p); }
+  renderSidebar();
+  renderArchiveSection();
+  toast('projeto restaurado');
+}
+
+function askPermDelete(pid,name){
+  _permDelId=pid;
+  document.getElementById('permDelName').textContent=`"${name}"`;
+  document.getElementById('permDelModal').classList.add('open');
+}
+async function confirmPermDelete(){
+  if(!_permDelId) return;
+  closeModal('permDelModal');
+  await api('DELETE',`/api/archive/${_permDelId}`);
+  _archiveData=_archiveData.filter(x=>x.id!==_permDelId);
+  _permDelId=null;
+  renderArchiveSection();
+  toast('projeto excluído permanentemente');
+}
+
+// ── SNAPSHOTS ─────────────────────────────────────────────────────────────────
+async function openSnapshotsModal(){
+  const listEl=document.getElementById('snapList');
+  listEl.innerHTML=`<div style="font-family:var(--mono);font-size:12px;color:var(--hint);text-align:center;padding:20px">carregando...</div>`;
+  document.getElementById('snapshotsModal').classList.add('open');
+  try{
+    const d=await api('GET','/api/snapshots');
+    const snaps=d.snapshots||[];
+    if(!snaps.length){
+      listEl.innerHTML=`<div style="font-family:var(--mono);font-size:12px;color:var(--hint);text-align:center;padding:20px">nenhum backup ainda</div>`;
+      return;
+    }
+    listEl.innerHTML=snaps.map(s=>{
+      const ts=s.ts;
+      const date=`${ts.slice(0,4)}-${ts.slice(4,6)}-${ts.slice(6,8)} ${ts.slice(9,11)}:${ts.slice(11,13)}`;
+      return `<div class="snap-item">
+        <span class="snap-ts">${date}</span>
+        <span class="snap-size">${s.size_kb} KB</span>
+        <button class="snap-restore-btn" onclick="restoreSnapshot('${s.name}')">restaurar</button>
+      </div>`;
+    }).join('');
+  }catch(e){ listEl.innerHTML=`<div style="color:var(--photo);font-size:12px;font-family:var(--mono)">erro ao carregar</div>`; }
+}
+
+async function restoreSnapshot(name){
+  if(!confirm('Restaurar este backup? O estado atual será salvo antes.')) return;
+  closeModal('snapshotsModal');
+  toast('restaurando backup...');
+  try{
+    const d=await api('POST',`/api/snapshots/${name}/restore`);
+    toast(`restaurado — ${d.projects} projeto(s)`);
+    const r=await api('GET','/api/projects');
+    projects=r.projects||[];
+    activeProject=null; activeSection=null; activePage=null;
+    renderSidebar();
+    document.getElementById('mainContent').innerHTML='';
+  }catch(e){ toast('erro ao restaurar'); }
 }
 
 function exportPDF(){
