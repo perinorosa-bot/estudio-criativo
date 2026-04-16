@@ -896,6 +896,51 @@ def export_form_pdf(pid, pgid):
                      download_name=f'{safe_name}.pdf')
 
 
+# ── Data import (one-time restore) ───────────────────────────────────────────
+@app.route('/api/import', methods=['GET'])
+@require_auth
+def import_page():
+    """Simple upload form to restore projects.json from local machine."""
+    return '''<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>importar dados</title>
+    <style>body{font-family:monospace;background:#EDE8E0;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+    .box{background:#F7F4EF;border:0.5px solid #D8D2C8;border-radius:12px;padding:40px;text-align:center;max-width:400px}
+    h2{margin:0 0 8px;font-size:16px}p{color:#5C6470;font-size:13px;margin:0 0 24px}
+    input{display:block;margin:0 auto 16px;font-family:monospace}
+    button{background:#1A2744;color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-family:monospace;font-size:13px}
+    .warn{color:#A31C2C;font-size:12px;margin-top:12px}</style></head>
+    <body><div class="box"><h2>importar projects.json</h2>
+    <p>Selecione o arquivo projects.json do seu computador para restaurar os dados no servidor.</p>
+    <form method="POST" enctype="multipart/form-data">
+      <input type="file" name="file" accept=".json" required />
+      <button type="submit">restaurar dados</button>
+    </form>
+    <p class="warn">⚠ isso sobrescreve todos os dados existentes no servidor</p>
+    </div></body></html>'''
+
+@app.route('/api/import', methods=['POST'])
+@require_auth
+def import_data():
+    """Restore projects.json uploaded from local machine."""
+    if 'file' not in request.files:
+        return 'nenhum arquivo enviado', 400
+    f = request.files['file']
+    try:
+        data = json.loads(f.read().decode('utf-8'))
+        if 'projects' not in data:
+            return 'arquivo inválido — falta chave "projects"', 400
+        save_data(data)
+        count = len(data['projects'])
+        return f'''<!DOCTYPE html><html><head><meta charset="UTF-8">
+        <title>importado</title>
+        <style>body{{font-family:monospace;background:#EDE8E0;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}}
+        .box{{background:#F7F4EF;border:0.5px solid #D8D2C8;border-radius:12px;padding:40px;text-align:center}}
+        h2{{color:#2B5231}}a{{color:#1A2744}}</style></head>
+        <body><div class="box"><h2>✓ {count} projeto(s) restaurado(s)</h2>
+        <p><a href="/">← voltar ao estúdio</a></p></div></body></html>'''
+    except Exception as e:
+        return f'erro ao processar arquivo: {e}', 400
+
 # ── Backup status / manual trigger ───────────────────────────────────────────
 @app.route('/api/backup', methods=['POST'])
 @require_auth
