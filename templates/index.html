@@ -1703,22 +1703,33 @@ function triggerUpload(){
 }
 async function handleFileUpload(e){
   const files=Array.from(e.target.files);
+  if(!files.length) return;
+  // Capture context BEFORE any async work so navigation mid-upload doesn't corrupt references
+  const targetPage=uploadForPage||activePage;
+  const pid=activeProject?.id;
+  const sid=activeSection?.id;
+  const pgid=targetPage?.id;
+  if(!pid||!sid||!pgid){e.target.value='';return;}
   for(const file of files){
     const form=new FormData();
     form.append('file',file);
-    const r=await fetch('/api/upload',{method:'POST',body:form});
-    const data=await r.json();
-    if(data.url){
-      const pid=activeProject.id,sid=activeSection.id,pgid=activePage.id;
-      const img=await api('POST',`/api/projects/${pid}/sections/${sid}/pages/${pgid}/images`,{url:data.url,thumb:data.thumb,name:file.name,caption:''});
-      if(!activePage.images) activePage.images=[];
-      activePage.images.push(img);
-      const grid=document.getElementById('imgGrid');
-      if(grid) grid.innerHTML=renderImgGrid();
-      const pg=document.getElementById('photoGrid');
-      if(pg) pg.innerHTML=renderPhotoGridItems();
-      toast('imagem adicionada');
-    }
+    try{
+      const r=await fetch('/api/upload',{method:'POST',body:form});
+      const data=await r.json();
+      if(data.url){
+        const img=await api('POST',`/api/projects/${pid}/sections/${sid}/pages/${pgid}/images`,{url:data.url,thumb:data.thumb,name:file.name,caption:''});
+        if(!targetPage.images) targetPage.images=[];
+        targetPage.images.push(img);
+        // Only update DOM if still viewing the same page
+        if(activePage?.id===pgid){
+          const grid=document.getElementById('imgGrid');
+          if(grid) grid.innerHTML=renderImgGrid();
+          const pg=document.getElementById('photoGrid');
+          if(pg) pg.innerHTML=renderPhotoGridItems();
+        }
+        toast('imagem adicionada');
+      }
+    }catch(err){toast('erro ao salvar imagem — tente novamente');}
   }
   e.target.value='';
 }
