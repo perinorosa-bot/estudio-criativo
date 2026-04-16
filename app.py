@@ -208,14 +208,18 @@ def index():
 
 # ── Notes API ─────────────────────────────────────────────────────────────────
 def _load_notes(data):
-    """Migrate old string format to list of cards."""
+    """Migrate old string format to list of cards. Always ensures data['notes'] is a list."""
     raw = data.get('notes', [])
     if isinstance(raw, str):
-        # legacy: convert single string to one card
         cards = [{'id': str(uuid.uuid4()), 'title': '', 'content': raw,
                   'created': datetime.utcnow().isoformat()}] if raw.strip() else []
         data['notes'] = cards
         return cards
+    if not isinstance(raw, list):
+        data['notes'] = []
+        return []
+    # ensure key exists in data (may have been missing entirely)
+    data['notes'] = raw
     return raw
 
 @app.route('/api/notes', methods=['GET'])
