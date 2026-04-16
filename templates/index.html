@@ -297,17 +297,30 @@ body{font-family:var(--serif);background:var(--bg);color:var(--text);height:100v
 .notepad-foot{font-family:var(--mono);font-size:11px;color:var(--hint);text-align:right;margin-top:10px;flex-shrink:0}
 
 /* PREVIEW */
-.preview-overlay{display:none;position:fixed;inset:0;background:rgba(28,28,26,.8);z-index:3000;overflow-y:auto;padding:48px 16px 80px}
+.preview-overlay{display:none;position:fixed;inset:0;background:rgba(28,28,26,.8);z-index:3000;overflow-y:auto;padding:72px 16px 80px}
 .preview-overlay.open{display:block}
-.preview-close-btn{position:fixed;top:16px;right:22px;font-size:30px;color:rgba(255,255,255,.7);cursor:pointer;background:none;border:none;font-family:sans-serif;line-height:1;z-index:3001;transition:color .15s}
-.preview-close-btn:hover{color:#fff}
+.preview-close-btn{position:fixed;top:16px;left:50%;transform:translateX(-50%);padding:7px 20px;font-size:12px;font-family:'Gelato','Courier New',monospace;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.7);cursor:pointer;background:rgba(255,255,255,.08);border:0.5px solid rgba(255,255,255,.2);border-radius:999px;z-index:3001;transition:all .15s}
+.preview-close-btn:hover{background:rgba(255,255,255,.16);color:#fff}
+
+/* DELETE CONFIRM MODAL */
+.del-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:4000;align-items:center;justify-content:center}
+.del-modal.open{display:flex}
+.del-inner{background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--rl);padding:32px;width:400px;max-width:92vw}
+.del-inner h3{font-size:17px;font-weight:400;font-family:var(--serif);margin:0 0 8px;color:var(--text)}
+.del-inner p{font-size:14px;color:var(--muted);margin:0 0 24px;line-height:1.6;font-family:var(--mono)}
+.del-inner strong{color:var(--photo);font-style:normal}
+.del-actions{display:flex;gap:10px;justify-content:flex-end}
+.del-cancel{padding:9px 18px;background:none;border:0.5px solid var(--border2);border-radius:var(--r);font-family:var(--mono);font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s}
+.del-cancel:hover{color:var(--text);border-color:var(--border2);background:var(--surface2)}
+.del-confirm{padding:9px 18px;background:var(--photo);border:none;border-radius:var(--r);font-family:var(--mono);font-size:13px;color:#fff;cursor:pointer;transition:opacity .15s;letter-spacing:.04em}
+.del-confirm:hover{opacity:.85}
 /* page base */
 .preview-page{background:#fff;width:595px;max-width:96vw;margin:0 auto 0;padding:113px 76px 76px 113px;font-family:'EB Garamond',Georgia,serif;color:#1a1a18;box-shadow:0 4px 32px rgba(0,0,0,.35);position:relative;min-height:842px}
 .preview-page+.preview-page{margin-top:0;border-top:1px solid #e8e8e8}
 /* book page overrides — ABNT/editorial standard */
 .preview-page.book-page{font-family:'Times New Roman',Times,Georgia,serif;font-size:15px}
 /* cover */
-.pv-cover{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:640px;text-align:center;gap:0}
+.pv-cover{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:580px;margin:-113px -76px -76px -113px;padding:80px 76px;text-align:center;gap:0}
 .pv-cover-title{font-size:34px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;margin-bottom:10px;line-height:1.2}
 .pv-cover-subtitle{font-size:18px;font-style:italic;color:#444;margin-bottom:20px;line-height:1.4}
 .pv-cover-rule{width:48px;border:none;border-top:1px solid #999;margin:0 auto 18px}
@@ -521,8 +534,20 @@ body{font-family:var(--serif);background:var(--bg);color:var(--text);height:100v
 
 <!-- PREVIEW OVERLAY -->
 <div class="preview-overlay" id="previewOverlay">
-  <button class="preview-close-btn" onclick="closePreview()">×</button>
+  <button class="preview-close-btn" onclick="closePreview()">← fechar preview</button>
   <div id="previewContent"></div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="del-modal" id="delModal">
+  <div class="del-inner">
+    <h3>excluir projeto?</h3>
+    <p>O projeto <strong id="delProjectName"></strong> será removido permanentemente.<br>Esta ação não pode ser desfeita.</p>
+    <div class="del-actions">
+      <button class="del-cancel" onclick="closeModal('delModal')">cancelar</button>
+      <button class="del-confirm" onclick="confirmDeleteProject()">sim, excluir</button>
+    </div>
+  </div>
 </div>
 
 <!-- FULLSCREEN EDITOR -->
@@ -1597,8 +1622,14 @@ async function createProject(){
     toast('projeto criado');
   }catch(e){ console.error('createProject error:',e); }
 }
-async function deleteProject(){
-  if(!activeProject||!confirm(`excluir "${activeProject.name}"?`)) return;
+function deleteProject(){
+  if(!activeProject) return;
+  document.getElementById('delProjectName').textContent=`"${activeProject.name}"`;
+  document.getElementById('delModal').classList.add('open');
+}
+async function confirmDeleteProject(){
+  if(!activeProject) return;
+  closeModal('delModal');
   await api('DELETE',`/api/projects/${activeProject.id}`);
   projects=projects.filter(p=>p.id!==activeProject.id);
   activeProject=null;
